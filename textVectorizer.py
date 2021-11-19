@@ -84,11 +84,15 @@ def textVectorizer2(dirname, stop_list):
                 #filetokens = list(f)
                 for token in filetokens:
                     if token not in stop_list:
-                        words.add(token)
-                        token_map[token] += 1
+                        if token != '':
+                            words.add(token)
+                            token_map[token] += 1
 
 
             documents[filename] = token_map
+
+    #documents -> 5000 documents
+    #each document -> words in that document and occurence count within that document
 
     # import pdb; pdb.set_trace()
     total_documents = len(documents)
@@ -100,12 +104,11 @@ def textVectorizer2(dirname, stop_list):
         total_words = len(tokens)
         tf = {}
         for word in words:
-            occurence_word_in_document = tokens[word]
+            occurence_word_in_document = tokens[word] #raw frequency of word within certain document
             tf[word] = occurence_word_in_document / total_words
             if occurence_word_in_document != 0:
-                documents_word[word] += 1
+                documents_word[word] += 1 #document frequency of word
         tf_documents[document] = tf
-
 
     #compute idf and create a words file at the same time
     with open(words_out, 'w') as f:
@@ -113,8 +116,20 @@ def textVectorizer2(dirname, stop_list):
             idf[word] = log(total_documents /  occurence)
             f.write(word + ',')
 
-    #output tf*idf
+    #output tf*idf file
     with open(tf_idf_out, 'w') as f:
+        #first line -> attributes name
+        f.write('Document,')
+        for index in range(len(words)):
+            f.write('Attribute{0},'.format(index))
+        f.write('\n')
+        #second line -> each attribute's type
+        f.write(str(len(tf_documents))) #how many documents there are
+        for index in range(len(words)):
+            f.write(',0') #everything is numerical so that's why every attribute is 0
+        f.write('\n')
+        f.write('Document') #class variable
+        f.write('\n')
         for document, tf_words in tf_documents.items():
             f.write(document + ',')
             for word, tf_value in tf_words.items():
@@ -122,14 +137,13 @@ def textVectorizer2(dirname, stop_list):
                 f.write(str(tf_value * idf_value) + ',')
             f.write('\n')
 
-
     # import pdb; pdb.set_trace()
 
 
 
     # add ground truth list to a file and output the groundtruth.csv
     #print(len(ground_truth))
-    with open ('groundtruth.csv', 'w') as f:
+    with open (sys.argv[1] + '_GroundTruth.csv', 'w') as f:
         for line in ground_truth:
             f.write(line)
             f.write('\n')
@@ -149,4 +163,3 @@ if __name__ == '__main__':
     stop_list = list(filter(lambda x: x != '', stop_list))
     # import pdb; pdb.set_trace()
     textVectorizer2(dirname, stop_list)
-
